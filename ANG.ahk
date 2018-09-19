@@ -1,4 +1,4 @@
-﻿#Persistent
+#Persistent
 #SingleInstance force
 
 OnExit("ExitFunc")
@@ -92,6 +92,16 @@ Help                   > How do I get a feature added here?         > Click HERE
 Help                   > Other Questions...                         > For questions about this system contact Eric Grechko by clicking HERE.             > P:\ANG_System_Files\RunHelpEmailScript.bat
 )
 
+FileRead, Freq, % A_Desktop "\most_common.txt"			; or use A_AppData instead of A_Desktop
+loop, Parse, Freq, `n, `r
+{
+	if A_Index > 7										; show top 7 most commonly used
+		break
+	RegExMatch(A_LoopField, "^\d+`t\K.*", m)
+	Menu, MyMenu, Add, %m%, Action
+}
+Menu, MyMenu, Add
+
 Loop, parse, MenuList, `n
 {
 	StringSplit, MenuLevel,A_LoopField, >
@@ -134,6 +144,15 @@ return
 Action:
 selected := varize(A_ThisMenuItem)
 Run % %selected%
+
+if RegExMatch(Freq,  "`am)^(\d+)`t" selected "$", m)
+	Freq := RegExReplace(Freq,  "`am)^(\d+)`t" selected "$", m1+1 "`t" selected)
+else
+	Freq .= "`n" 1 "`t" selected
+
+Sort, Freq, R
+FileDelete, % A_Desktop "\most_common.txt"
+FileAppend, % Freq, % A_Desktop "\most_common.txt"
 return
 ;---------------------------------------------------------------
 varize(var, autofix = true) {
@@ -157,7 +176,7 @@ varize(var, autofix = true) {
 
 ExitFunc(Exit, ExitCode)
 {
-    SplashTextOn, 300, 100, ANG UPDATE, The ANG system is being updated and has to close.`n`n Please try again in a few minutes.
+    SplashTextOn, 300, 100, ANG UPDATE, The ANG system is either closing or updating.`n`n Please try again in a few minutes.
 	Sleep, 10000
 	SplashTextOff
 }
